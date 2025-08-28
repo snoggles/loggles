@@ -1,0 +1,27 @@
+{
+  "name": "loggles",
+  "version": "1.0.0",
+  "description": "Discord bot to log/mirror temporary channels",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snoggles/loggles.git"
+  },
+  "author": "snoggles",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/snoggles/loggles/issues"
+  },
+  "homepage": "https://github.com/snoggles/loggles#readme",
+  "dependencies": {
+    "discord-html-transcripts": "^3.2.0",
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.1",
+    "html-escaper": "^3.0.3",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
+  }
+}
