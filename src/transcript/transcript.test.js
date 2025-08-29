@@ -19,6 +19,12 @@ test('generate html', async (t) => {
         avatar: '9dff1029d5ad84ed45593b2b60c292f4',
     });
 
+    // Create guild first since Channel references it
+    await db.Guild.create({
+        guildId: 1,
+        name: 'Test Guild',
+    });
+
     await db.Channel.create({
         guildId: 1,
         channelId: 1,
@@ -39,6 +45,14 @@ test('generate html', async (t) => {
         content: 'Hello world!',
         createdAt: new Date('2023-01-01T00:00:00Z'),
     });
+    
+    // Add a second version to test edit functionality
+    await db.MessageVersion.create({
+        messageId: 1,
+        content: 'Hello world! How are you?',
+        createdAt: new Date('2023-01-01T00:01:00Z'),
+    });
+    
     await db.Reaction.create({
         reactionId: 1,
         messageId: 1,

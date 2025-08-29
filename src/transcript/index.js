@@ -58,51 +58,64 @@ async function generateTranscript(channelId, opts) {
     });
 
     const reactions = new Map();
-    const fakeMessages = dbMessages.map((m) => {
+    const fakeMessages = [];
+
+    for (const m of dbMessages) {
         const user = m.User;
         const avatarHash = user?.avatar || null;
         const userId = m.authorId;
         
-        // Get attachments from the latest message version
-        const latestVersion = m.MessageVersions[m.MessageVersions.length - 1];
-        const attachments = new Collection();
-        
-        if (latestVersion.Attachments && latestVersion.Attachments.length > 0) {
-            latestVersion.Attachments.forEach((att) => {
-                attachments.set(att.id, {
-                    id: att.id,
-                    name: att.filename,
-                    url: att.storageUrl,
-                    size: att.size,
-                    contentType: att.contentType,
-                    width: att.width || null,
-                    height: att.height || null,
+
+
+        // Create a message for each version
+        for (let index = 0; index < m.MessageVersions.length; index++) {
+            const version = m.MessageVersions[index];
+            const isEdit = index > 0;
+            const messageId = isEdit ? `${m.messageId}-v${index + 1}` : m.messageId;
+            
+            // Get attachments from this specific message version
+            const attachments = new Collection();
+            
+            if (version.Attachments && version.Attachments.length > 0) {
+                version.Attachments.forEach((att) => {
+                    attachments.set(att.id, {
+                        id: att.id,
+                        name: att.filename,
+                        url: att.storageUrl,
+                        size: att.size,
+                        contentType: att.contentType,
+                        width: att.width || null,
+                        height: att.height || null,
+                    });
                 });
+            }
+
+            // Add version prefix for edited messages
+            const content = isEdit ? `version ${index + 1}: ${version.content}` : version.content;
+
+            fakeMessages.push({
+                id: messageId,
+                author: {
+                    id: m.authorId,
+                    username: user?.username || 'Unknown',
+                    displayName: user?.globalName && user?.username && user?.globalName != user?.username ? `${user.globalName} (${user.username})` : user?.username || user?.globalName || 'Unknown',
+                    displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
+                },
+                createdAt: new Date(version.createdAt),
+                content: content,
+                embeds: Array.isArray(version.embeds) ? version.embeds : [],
+                editedAt: isEdit ? new Date(version.createdAt) : null,
+                components: [],
+                mentions: {
+                    everyone: false,
+                },
+                reactions: {
+                    cache: reactions,
+                },
+                attachments: attachments,
             });
         }
-
-        return {
-            id: m.messageId,
-            author: {
-                id: m.authorId,
-                username: user?.username || 'Unknown',
-                displayName: user?.globalName && user?.username && user?.globalName != user?.username ? `${user.globalName} (${user.username})` : user?.username || user?.globalName || 'Unknown',
-                displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
-            },
-            createdAt: new Date(m.MessageVersions[0].createdAt),
-            content: m.MessageVersions[0].content,
-            embeds: Array.isArray(m.MessageVersions[0].embeds) ? m.MessageVersions[0].embeds : [],
-            editedAt: null, // TODO
-            components: [],
-            mentions: {
-                everyone: false,
-            },
-            reactions: {
-                cache: reactions,
-            },
-            attachments: attachments,
-        }
-    });
+    }
 
     const fakeChannel = {
         name: channel.name,
