@@ -3,6 +3,7 @@ const db = require('../db');
 const fs = require('fs');
 const path = require('path');
 const discordTranscripts = require('discord-html-transcripts');
+const { buildAvatarUrl } = require('../utils/avatar');
 
 /**
  * Generates an HTML transcript from messages saved in the database.
@@ -30,23 +31,28 @@ async function generateTranscript(channelId, opts) {
         where: { channelId: channelId },
         include: [
             { model: db.MessageVersion, order: [['createdAt', 'ASC']] },
-            db.Reaction
+            db.Reaction,
+            db.User,
         ],
     });
 
     const reactions = new Map();
     const attachments = new Map();
     const fakeMessages = dbMessages.map((m) => {
+        const user = m.User;
+        const avatarHash = user?.avatar || null;
+        const userId = m.authorId;
         return {
             id: m.messageId,
             author: {
                 id: m.authorId,
-                username: m.authorUsername,
-                displayName: m.authorUsername,
-                displayAvatarURL: (opts) => '', // { size: 64 }
+                username: user?.username || 'Unknown',
+                displayName: user?.globalName || user?.username || 'Unknown',
+                displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
             },
             createdAt: new Date(m.MessageVersions[0].createdAt),
             content: m.MessageVersions[0].content,
+            editedAt: null, // TODO
             embeds: [],
             components: [],
             mentions: {
@@ -69,7 +75,10 @@ async function generateTranscript(channelId, opts) {
         }
     }
 
-    return await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel, opts);
+    return {
+        messages: dbMessages,
+        transcript: await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel, opts),
+    };
 }
 
 module.exports = generateTranscript;

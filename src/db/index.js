@@ -19,8 +19,20 @@ function define(name, attributes) {
   return sequelize.define(name, attributes, modelOptions);
 }
 
+const User = define('User', {
+  id: {
+    ...snowflake('id'),
+    unique: true,
+    primaryKey: true,
+  },
+  username: DataTypes.STRING,
+  globalName: DataTypes.STRING,
+  // Discord avatar hash, e.g. '9dff1029d5ad84ed45593b2b60c292f4' or 'a_...'
+  avatar: DataTypes.STRING,
+});
+
 const Channel = define('Channel', {
-  guildId: DataTypes.BIGINT,
+  guildId: snowflake('guildId'),
   channelId: {
     ...snowflake('channelId'),
     unique: true,
@@ -39,7 +51,6 @@ const Message = define("Message", {
   },
   channelId: snowflake('channelId'),
   authorId: snowflake('authorId'),
-  authorUsername: DataTypes.STRING,
 });
 
 const MessageVersion = define("MessageVersion", {
@@ -70,4 +81,8 @@ MessageVersion.belongsTo(Message, { foreignKey: "messageId" });
 Message.hasMany(Reaction, { foreignKey: 'messageId' });
 Reaction.belongsTo(Message, { foreignKey: 'messageId' });
 
-module.exports = { sequelize, Channel, Message, MessageVersion, Reaction };
+// Associations for users
+User.hasMany(Message, { foreignKey: 'authorId', sourceKey: 'id' });
+Message.belongsTo(User, { foreignKey: 'authorId', targetKey: 'id' });
+
+module.exports = { sequelize, User, Channel, Message, MessageVersion, Reaction };

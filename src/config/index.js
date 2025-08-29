@@ -10,4 +10,5 @@ module.exports = {
   dbUrl: process.env.DATABASE_URL || "sqlite:./data.sqlite",
   env: process.env.NODE_ENV || "development",
   loggingChannelId: async (guildId) => '1383630551298080778',
+  storageChannelId: async (guildId) => '1410921412968976465',
 };

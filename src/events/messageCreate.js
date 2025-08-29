@@ -9,7 +9,15 @@ module.exports = {
 	async execute(message) {
 		if (message.channelId === await config.loggingChannelId(message.guildId))
 			return;
-		
+
+		// Upsert user details for avatar and names
+		await db.User.upsert({
+			id: message.author.id,
+			username: message.author.username,
+			globalName: message.author.globalName ?? null,
+			avatar: message.author.avatar ?? null,
+		});
+
 		const channelDbo = {
 			guildId: message.channel.guildId,
 			channelId: message.channelId,
@@ -22,7 +30,6 @@ module.exports = {
 			messageId: message.id,
 			channelId: message.channelId,
 			authorId: message.author.id,
-			authorUsername: message.author.username,
 		}
 		await db.Message.upsert(msgDbo);
 

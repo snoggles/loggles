@@ -10,7 +10,7 @@ module.exports = {
 		if (channel.id === loggingChannelId) return;
 
 
-		const buffer = await generateTranscript(
+		const response = await generateTranscript(
 			channel.id,
 			{
 				returnType: 'buffer',
@@ -25,7 +25,7 @@ module.exports = {
 			content: description,
 			files: [
 				{
-					attachment: buffer,
+					attachment: response.transcript,
 					name: `#${channel.id} ${channel.name} transcript.html`,
 					description: description,
 				}

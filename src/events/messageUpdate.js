@@ -7,6 +7,16 @@ module.exports = {
 	async execute(oldMessage, newMessage) {
 		if (newMessage.id === await config.loggingChannelId(newMessage.guildId)) return;
 
+		// Ensure we have up-to-date user info on edits too
+		if (newMessage.author) {
+			await db.User.upsert({
+				id: newMessage.author.id,
+				username: newMessage.author.username,
+				globalName: newMessage.author.globalName ?? null,
+				avatar: newMessage.author.avatar ?? null,
+			});
+		}
+
 		const msgVersionDbo = {
 			messageId: newMessage.id,
 			content: newMessage.content,

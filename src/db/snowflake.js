@@ -6,14 +6,18 @@ const { Sequelize, DataTypes } = require('sequelize');
  */
 module.exports = function snowflake(colName) {
     return {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING,
         allowNull: false,
         get() {
-            const val = this.getDataValue(colName); // bigint
-            return val ? val.toString() : null;
+            // Sqlite node package doesn't support bigint! https://github.com/sequelize/sequelize/pull/17154
+            // const val = this.getDataValue(colName); // bigint
+            // return val ? val.toString() : null;
+            return this.getDataValue(colName);
         },
         set(val) {
-            this.setDataValue(colName, BigInt(val));
+            // const bigint = BigInt(val)
+            // this.setDataValue(colName, bigint);
+            this.setDataValue(colName, val);
         }
     }
 }

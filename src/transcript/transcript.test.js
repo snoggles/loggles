@@ -11,6 +11,14 @@ before(async () => {
 test('generate html', async (t) => {
     // Insert test data
 
+    // Dummy user matching the provided avatar URL
+    await db.User.create({
+        id: '184516916793049095',
+        username: 'Snoggles',
+        globalName: 'Snoggles',
+        avatar: '9dff1029d5ad84ed45593b2b60c292f4',
+    });
+
     await db.Channel.create({
         guildId: 1,
         channelId: 1,
@@ -20,8 +28,7 @@ test('generate html', async (t) => {
     await db.Message.create({
         messageId: 1,
         channelId: 1,
-        authorId: 1,
-        authorUsername: 'Snoggles',
+        authorId: '184516916793049095',
         content: 'Hello world!',
         edited: false,
         deleted: false,
@@ -46,8 +53,8 @@ test('generate html', async (t) => {
         footerText: 'end of transcript',
         poweredBy: false,
     }
-    const buf = await generateTranscript('1', opts);
-    const html = buf.toString('utf-8');
+    const response = await generateTranscript('1', opts);
+    const html = response.transcript.toString('utf-8');
     console.log(html);
     const outputPath = path.join(__dirname, `transcript.html`);
     fs.writeFileSync(outputPath, html, 'utf-8');
