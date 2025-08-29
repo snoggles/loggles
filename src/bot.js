@@ -46,10 +46,10 @@ for (const file of eventFiles) {
     const event = require(filePath);
 
     console.log(`Event listener: ${event.name}`)
-    const dispatchEvent = (...args) => {
+    const dispatchEvent = async (...args) => {
         console.log(`Event ${event.name} | `, args[0]);
         try {
-            event.execute(...args);
+            await event.execute(...args);
         } catch (error) {
             console.error(`Error executing event ${event.name}:`, error);
         }
