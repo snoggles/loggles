@@ -4,7 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const discordTranscripts = require('discord-html-transcripts');
 const { buildAvatarUrl } = require('../utils/avatar');
-const { Collection } = require('discord.js');
+const { Collection, ChannelManager } = require('discord.js');
+const { createFakeGuild } = require('./fakes');
+const { dummyCallbacks } = require('./callbacks');
 
 /**
  * Generates an HTML transcript from messages saved in the database.
@@ -23,10 +25,18 @@ async function generateTranscript(channelId, opts) {
     const channel = await db.Channel.findOne({
         where: {
             channelId: channelId
-        }
+        },
+        include: [db.Guild]
     });
 
     if (!channel) return;
+
+    // Get guild data for the transcript
+    const guildData = channel.Guild;
+    if (!guildData) {
+        console.warn(`No guild data found for channel ${channelId}`);
+        return;
+    }
 
     const dbMessages = await db.Message.findAll({
         where: { channelId: channelId },
@@ -95,18 +105,21 @@ async function generateTranscript(channelId, opts) {
     });
 
     const fakeChannel = {
+        name: channel.name,
         isDMBased: () => false,
         isThread: () => false,
         isVoiceBased: () => true, // TODO
-        guild: {
-            name: channel.name,
-            iconURL: (opts) => '', // { size: 128 }
-        }
+        guild: createFakeGuild(guildData)
     }
 
     return {
         messages: dbMessages ?? [],
-        transcript: await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel, opts),
+        transcript: await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel,
+            {
+                callbacks: dummyCallbacks,
+                ...opts
+            }
+        ),
     };
 }
 

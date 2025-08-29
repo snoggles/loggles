@@ -6,7 +6,7 @@ const { Attachment } = require('discord.js');
 async function bufferSha256(buffer) {
   const hash = crypto.createHash('sha256');
   hash.update(buffer);
-  return hash.digest('hex');
+  return hash.digest(); // Buffer for BLOB storage
 }
 
 async function fetchBuffer(url) {

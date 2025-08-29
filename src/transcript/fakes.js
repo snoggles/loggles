@@ -43,6 +43,17 @@ function createEmbeds(embeds) {
 	}));
 }
 
-module.exports = { createEmbeds };
+function createFakeGuild(guildData) {
+	return {
+		name: guildData.name || 'Unknown Guild',
+		iconURL: (opts = {}) => {
+			if (!guildData.icon) return null;
+			const size = opts.size || 128;
+			return `https://cdn.discordapp.com/icons/${guildData.guildId}/${guildData.icon}.webp?size=${size}`;
+		},
+	};
+}
+
+module.exports = { createEmbeds, createFakeGuild };
 
 

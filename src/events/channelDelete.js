@@ -2,6 +2,7 @@ const { Events, AttachmentBuilder } = require('discord.js');
 const generateTranscript = require('../transcript');
 const fs = require('fs');
 const config = require('../config');
+const { channelCallbacks } = require('../transcript/callbacks');
 
 module.exports = {
 	name: Events.ChannelDelete,
@@ -16,6 +17,7 @@ module.exports = {
 				returnType: 'buffer',
 				footerText: 'end of transcript',
 				poweredBy: false,
+				callbacks: channelCallbacks(channel)
 			}
 		)
 		if (!response) return;

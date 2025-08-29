@@ -10,8 +10,16 @@ module.exports = {
   dbUrl: process.env.DATABASE_URL || "sqlite:./data.sqlite",
   env: process.env.NODE_ENV || "development",
   ignoredUserIds: [
-    '762217899355013120', // TempVoice
+    // '762217899355013120', // TempVoice
   ],
-  loggingChannelId: async (guildId) => '1383630551298080778',
-  storageChannelId: async (guildId) => '1410921412968976465',
+  loggingChannelId: async (guildId) => {
+    const db = require('../db');
+    const guild = await db.Guild.findByPk(guildId);
+    return guild?.loggingChannelId || null;
+  },
+  storageChannelId: async (guildId) => {
+    const db = require('../db');
+    const guild = await db.Guild.findByPk(guildId);
+    return guild?.storageChannelId || null;
+  },
 };

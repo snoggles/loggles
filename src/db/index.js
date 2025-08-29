@@ -4,19 +4,19 @@ const { Sequelize, DataTypes } = require('sequelize');
 
 const sequelize = new Sequelize(config.dbUrl, {
   dialect: 'sqlite',
-  // logging: (queryString, queryObject) => {
-  //   console.log(queryString)      // outputs a string
-  //   console.log(queryObject.bind) // outputs an array
-  // },
-  logging: false,
+  logging: (queryString, queryObject) => {
+    console.log(queryString)      // query as string
+    if (queryObject.bind) console.log(queryObject.bind) // params as array
+  },
+  // logging: false,
 });
 
-const modelOptions = {
+const defaultModelOptions = {
   timestamps: false,
 }
 
-function define(name, attributes) {
-  return sequelize.define(name, attributes, modelOptions);
+function define(name, attributes, options = {}) {
+  return sequelize.define(name, attributes, { ...defaultModelOptions, ...options });
 }
 
 const User = define('User', {
@@ -32,12 +32,12 @@ const User = define('User', {
 });
 
 const Channel = define('Channel', {
-  guildId: snowflake('guildId'),
   channelId: {
     ...snowflake('channelId'),
     unique: true,
     primaryKey: true,
   },
+  guildId: snowflake('guildId'),
   name: DataTypes.STRING,
   createdAt: DataTypes.DATE,
   deletedAt: DataTypes.DATE,
@@ -88,22 +88,33 @@ const Reaction = define('Reaction', {
 });
 
 // Stored, mirrored attachment in the permanent storage channel
-const Attachment = define('Attachment', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  // sha256 hash of the attachment content for deduplication
-  hash: { type: DataTypes.STRING, unique: true, allowNull: false },
-  // Original filename
-  filename: DataTypes.STRING,
-  contentType: DataTypes.STRING,
-  size: DataTypes.INTEGER,
-  // Image dimensions (if applicable)
-  width: DataTypes.INTEGER,
-  height: DataTypes.INTEGER,
-  // Where we mirrored it
-  storageChannelId: snowflake('storageChannelId'),
-  storageMessageId: snowflake('storageMessageId'),
-  storageUrl: DataTypes.STRING,
-});
+const Attachment = define(
+  'Attachment',
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    // sha256 hash of the attachment content for deduplication (stored as BLOB for efficiency)
+    hash: { type: DataTypes.BLOB, unique: true, allowNull: false },
+    // Original filename
+    filename: DataTypes.STRING,
+    contentType: DataTypes.STRING,
+    size: DataTypes.INTEGER,
+    // Image dimensions (if applicable)
+    width: DataTypes.INTEGER,
+    height: DataTypes.INTEGER,
+    // Where we mirrored it
+    storageChannelId: snowflake('storageChannelId'),
+    storageMessageId: snowflake('storageMessageId'),
+    storageUrl: DataTypes.STRING,
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['hash'],
+      },
+    ]
+  }
+);
 
 // Link table between a specific message version and attachments
 const MessageVersionAttachment = define('MessageVersionAttachment', {
@@ -127,4 +138,26 @@ Message.belongsTo(User, { foreignKey: 'authorId', targetKey: 'id' });
 MessageVersion.belongsToMany(Attachment, { through: MessageVersionAttachment, foreignKey: 'messageVersionId' });
 Attachment.belongsToMany(MessageVersion, { through: MessageVersionAttachment, foreignKey: 'attachmentId' });
 
-module.exports = { sequelize, User, Channel, Message, MessageVersion, Reaction, Attachment, MessageVersionAttachment };
+// Guild configuration table
+const Guild = define('Guild', {
+  guildId: {
+    ...snowflake('guildId'),
+    unique: true,
+    primaryKey: true,
+  },
+  name: DataTypes.STRING,
+  icon: DataTypes.STRING, // Icon hash
+  loggingChannelId: {
+    ...snowflake('loggingChannelId'),
+    allowNull: true,
+  },
+  storageChannelId: {
+    ...snowflake('storageChannelId'),
+    allowNull: true,
+  }
+});
+
+Channel.belongsTo(Guild, { foreignKey: 'guildId' })
+Guild.hasMany(Channel, { foreignKey: 'guildId' })
+
+module.exports = { sequelize, User, Channel, Message, MessageVersion, Reaction, Attachment, MessageVersionAttachment, Guild };
