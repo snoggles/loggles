@@ -42,7 +42,7 @@ test('generate html', async (t) => {
 
     const opts = {
         returnType: 'buffer',
-        filename: `channel-${channelId}-transcript.html`,
+        filename: `test-transcript.html`,
         footerText: 'end of transcript',
         poweredBy: false,
     }
