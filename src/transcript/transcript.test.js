@@ -53,6 +53,20 @@ test('generate html', async (t) => {
         createdAt: new Date('2023-01-01T00:01:00Z'),
     });
     
+    // Add a third version to test multiline strikethrough
+    await db.MessageVersion.create({
+        messageId: 1,
+        content: 'Hello world!\nHow are you today?',
+        createdAt: new Date('2023-01-01T00:02:00Z'),
+    });
+    
+    // Add a fourth version to test chaining references
+    await db.MessageVersion.create({
+        messageId: 1,
+        content: 'Hello world! How are you today?',
+        createdAt: new Date('2023-01-01T00:03:00Z'),
+    });
+
     await db.Reaction.create({
         reactionId: 1,
         messageId: 1,

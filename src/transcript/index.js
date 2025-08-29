@@ -38,12 +38,19 @@ async function generateTranscript(channelId, opts) {
         return;
     }
 
+    const fakeChannel = {
+        name: channel.name,
+        isDMBased: () => false,
+        isThread: () => false,
+        isVoiceBased: () => true, // TODO
+        guild: createFakeGuild(guildData)
+    }
+
     const dbMessages = await db.Message.findAll({
         where: { channelId: channelId },
         include: [
-            { 
-                model: db.MessageVersion, 
-                order: [['createdAt', 'ASC']],
+            {
+                model: db.MessageVersion,
                 include: [
                     {
                         model: db.Attachment,
@@ -55,6 +62,7 @@ async function generateTranscript(channelId, opts) {
             db.Reaction,
             db.User,
         ],
+        order: [[{ model: db.MessageVersion }, 'createdAt', 'ASC']], // https://stackoverflow.com/a/65268641
     });
 
     const reactions = new Map();
@@ -64,18 +72,18 @@ async function generateTranscript(channelId, opts) {
         const user = m.User;
         const avatarHash = user?.avatar || null;
         const userId = m.authorId;
-        
-
+        const isEdit = m.MessageVersions.length > 1;
 
         // Create a message for each version
         for (let index = 0; index < m.MessageVersions.length; index++) {
             const version = m.MessageVersions[index];
-            const isEdit = index > 0;
-            const messageId = isEdit ? `${m.messageId}-v${index + 1}` : m.messageId;
-            
+        
+            const isFinalVersion = index === m.MessageVersions.length - 1
+            const messageId = isFinalVersion ? m.messageId : `${m.messageId}.${index}`;
+
             // Get attachments from this specific message version
             const attachments = new Collection();
-            
+
             if (version.Attachments && version.Attachments.length > 0) {
                 version.Attachments.forEach((att) => {
                     attachments.set(att.id, {
@@ -90,21 +98,25 @@ async function generateTranscript(channelId, opts) {
                 });
             }
 
-            // Add version prefix for edited messages
-            const content = isEdit ? `version ${index + 1}: ${version.content}` : version.content;
-
-            fakeMessages.push({
+            const content = isFinalVersion ? version.content : `~~${version.content}~~`;
+            
+            const messageObj = {
                 id: messageId,
                 author: {
                     id: m.authorId,
                     username: user?.username || 'Unknown',
                     displayName: user?.globalName && user?.username && user?.globalName != user?.username ? `${user.globalName} (${user.username})` : user?.username || user?.globalName || 'Unknown',
                     displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
+                    avatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
                 },
+                channel: fakeChannel,
                 createdAt: new Date(version.createdAt),
                 content: content,
                 embeds: Array.isArray(version.embeds) ? version.embeds : [],
                 editedAt: isEdit ? new Date(version.createdAt) : null,
+                guild: {
+                    id: guildData.guildId
+                },
                 components: [],
                 mentions: {
                     everyone: false,
@@ -113,16 +125,10 @@ async function generateTranscript(channelId, opts) {
                     cache: reactions,
                 },
                 attachments: attachments,
-            });
-        }
-    }
+            };
 
-    const fakeChannel = {
-        name: channel.name,
-        isDMBased: () => false,
-        isThread: () => false,
-        isVoiceBased: () => true, // TODO
-        guild: createFakeGuild(guildData)
+            fakeMessages.push(messageObj);
+        }
     }
 
     return {
