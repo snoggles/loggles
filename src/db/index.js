@@ -78,10 +78,7 @@ const MessageVersion = define("MessageVersion", {
 });
 
 const Reaction = define('Reaction', {
-  reactionId: {
-    ...snowflake('reactionId'),
-    primaryKey: true,
-  },
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   messageId: snowflake('messageId'),
   emoji: DataTypes.STRING,
   authorId: snowflake('authorId'),
@@ -130,6 +127,9 @@ Message.hasMany(MessageVersion, { foreignKey: "messageId" });
 MessageVersion.belongsTo(Message, { foreignKey: "messageId" });
 Message.hasMany(Reaction, { foreignKey: 'messageId' });
 Reaction.belongsTo(Message, { foreignKey: 'messageId' });
+
+Reaction.hasOne(User, { foreignKey: 'authorId' })
+
 
 // Associations for users
 User.hasMany(Message, { foreignKey: 'authorId', sourceKey: 'id' });

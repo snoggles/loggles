@@ -59,13 +59,15 @@ async function generateTranscript(channelId, opts) {
                     }
                 ]
             },
-            db.Reaction,
+            {
+                model: db.Reaction,
+                include: [db.User]
+            },
             db.User,
         ],
         order: [[{ model: db.MessageVersion }, 'createdAt', 'ASC']], // https://stackoverflow.com/a/65268641
     });
 
-    const reactions = new Map();
     const fakeMessages = [];
 
     for (const m of dbMessages) {
@@ -98,6 +100,44 @@ async function generateTranscript(channelId, opts) {
                 });
             }
 
+            // Process reactions for this message
+            const messageReactions = new Collection();
+            if (m.Reactions && m.Reactions.length > 0) {
+                // Group reactions by emoji
+                const reactionGroups = {};
+                m.Reactions.forEach(reaction => {
+                    const emojiKey = reaction.emoji;
+                    if (!reactionGroups[emojiKey]) {
+                        reactionGroups[emojiKey] = {
+                            count: 0,
+                            users: new Collection(),
+                            emoji: reaction.emoji
+                        };
+                    }
+                    reactionGroups[emojiKey].count++;
+                    if (reaction.User) {
+                        reactionGroups[emojiKey].users.set(reaction.User.id, reaction.User);
+                    }
+                });
+
+                // Convert to discord.js reaction format
+                Object.entries(reactionGroups).forEach(([emojiKey, group]) => {
+                    const [emojiName, emojiId] = emojiKey.includes(':') ? emojiKey.split(':') : [emojiKey, null];
+                    
+                    messageReactions.set(emojiKey, {
+                        emoji: {
+                            id: emojiId,
+                            name: emojiName,
+                            animated: emojiId ? false : false, // We'll need to determine this from the emoji data
+                        },
+                        count: group.count,
+                        users: {
+                            cache: group.users
+                        }
+                    });
+                });
+            }
+
             const content = isFinalVersion ? version.content : `~~${version.content}~~`;
             
             const messageObj = {
@@ -122,7 +162,7 @@ async function generateTranscript(channelId, opts) {
                     everyone: false,
                 },
                 reactions: {
-                    cache: reactions,
+                    cache: messageReactions,
                 },
                 attachments: attachments,
             };
