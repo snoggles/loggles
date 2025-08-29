@@ -47,7 +47,7 @@ async function generateTranscript(channelId, opts) {
             author: {
                 id: m.authorId,
                 username: user?.username || 'Unknown',
-                displayName: user?.globalName || user?.username || 'Unknown',
+                displayName: `${user.globalName} (${user.username})`,
                 displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
             },
             createdAt: new Date(m.MessageVersions[0].createdAt),
