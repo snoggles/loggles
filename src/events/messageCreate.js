@@ -4,12 +4,14 @@ const config = require('../config');
 const { Message } = require('discord.js');
 const generateTranscript = require('../transcript')
 const { createEmbeds } = require('../transcript/fakes');
+const { mirrorAndLinkAttachments } = require('../utils/attachments');
 
 module.exports = {
 	name: Events.MessageCreate,
 	async execute(message) {
-		if (message.channelId === await config.loggingChannelId(message.guildId))
-			return;
+		const loggingChannelId = await config.loggingChannelId(message.guildId);
+		const storageChannelId = await config.storageChannelId(message.guildId);
+		if (message.channelId === loggingChannelId || message.channelId === storageChannelId) return;
 
 		// Upsert user details for avatar and names
 		await db.User.upsert({
@@ -40,6 +42,7 @@ module.exports = {
 			embeds: createEmbeds(message.embeds ?? []),
 			createdAt: message.createdAt,
 		}
-		await db.MessageVersion.create(msgVersionDbo);
+		const version = await db.MessageVersion.create(msgVersionDbo);
+		await mirrorAndLinkAttachments(message, version.id);
 	},
 };

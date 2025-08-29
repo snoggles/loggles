@@ -18,27 +18,14 @@ module.exports = {
 				poweredBy: false,
 			}
 		)
+		if (!response) return;
 
-		const authorsMap = new Map();
-		for (const msg of response.messages) {
-			const user = msg.User;
-			if (!user) continue;
-			if (!authorsMap.has(user.id)) {
-				authorsMap.set(user.id, {
-					id: user.id,
-					username: user.username,
-					globalName: user.globalName,
-				});
-			}
-		}
-
-		const ignoredUserIds = config.ignoredUserIds || [];
-		const hasNonIgnoredUser = authorsMap.keys().some(userId => !ignoredUserIds.includes(userId));
-		if (!hasNonIgnoredUser) {
+		const humanAuthors = findHumanAuthors(response.messages);
+		if (humanAuthors.size === 0) {
 			return;
 		}
 
-		const authorList = Array.from(authorsMap.values())
+		const authorList = Array.from(humanAuthors.values())
 			.map(u => `- <@${u.id}> ${u.username}` + (u.globalName && u.globalName != u.username ? ` (${u.globalName})` : ''))
 			.join('\n');
 
@@ -58,3 +45,24 @@ module.exports = {
 		});
 	},
 };
+
+function findHumanAuthors(messages) {
+	const authorsMap = new Map();
+	for (const msg of (messages ?? [])) {
+		const user = msg.User;
+		if (!user) continue;
+		if (!authorsMap.has(user.id)) {
+			authorsMap.set(user.id, {
+				id: user.id,
+				username: user.username,
+				globalName: user.globalName,
+			});
+		}
+	}
+
+	const ignoredUserIds = config.ignoredUserIds || [];
+	for (ignored of ignoredUserIds) {
+		authorsMap.delete(ignored);
+	}
+	return authorsMap;
+}

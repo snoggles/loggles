@@ -2,11 +2,14 @@ const { Events, MessageFlags, AttachmentBuilder } = require('discord.js');
 const config = require('../config');
 const db = require('../db');
 const { createEmbeds } = require('../transcript/fakes');
+const { mirrorAndLinkAttachments } = require('../utils/attachments');
 
 module.exports = {
 	name: Events.MessageUpdate,
 	async execute(oldMessage, newMessage) {
-		if (newMessage.id === await config.loggingChannelId(newMessage.guildId)) return;
+		const loggingChannelId = await config.loggingChannelId(newMessage.guildId);
+		const storageChannelId = await config.storageChannelId(newMessage.guildId);
+		if (newMessage.channelId === loggingChannelId || newMessage.channelId === storageChannelId) return;
 
 		// Ensure we have up-to-date user info on edits too
 		if (newMessage.author) {
@@ -24,6 +27,7 @@ module.exports = {
 			embeds: createEmbeds(newMessage.embeds ?? []),
 			createdAt: newMessage.createdAt,
 		}
-		await db.MessageVersion.create(msgVersionDbo);
+		const version = await db.MessageVersion.create(msgVersionDbo);
+		await mirrorAndLinkAttachments(newMessage, version.id);
 	},
 };

@@ -87,6 +87,31 @@ const Reaction = define('Reaction', {
   createdAt: DataTypes.DATE,
 });
 
+// Stored, mirrored attachment in the permanent storage channel
+const Attachment = define('Attachment', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  // sha256 hash of the attachment content for deduplication
+  hash: { type: DataTypes.STRING, unique: true, allowNull: false },
+  // Original filename
+  filename: DataTypes.STRING,
+  contentType: DataTypes.STRING,
+  size: DataTypes.INTEGER,
+  // Image dimensions (if applicable)
+  width: DataTypes.INTEGER,
+  height: DataTypes.INTEGER,
+  // Where we mirrored it
+  storageChannelId: snowflake('storageChannelId'),
+  storageMessageId: snowflake('storageMessageId'),
+  storageUrl: DataTypes.STRING,
+});
+
+// Link table between a specific message version and attachments
+const MessageVersionAttachment = define('MessageVersionAttachment', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  messageVersionId: { type: DataTypes.INTEGER, allowNull: false },
+  attachmentId: { type: DataTypes.INTEGER, allowNull: false },
+});
+
 Channel.hasMany(Message, { foreignKey: 'channelId' });
 Message.belongsTo(Channel, { foreignKey: 'channelId' });
 Message.hasMany(MessageVersion, { foreignKey: "messageId" });
@@ -98,4 +123,8 @@ Reaction.belongsTo(Message, { foreignKey: 'messageId' });
 User.hasMany(Message, { foreignKey: 'authorId', sourceKey: 'id' });
 Message.belongsTo(User, { foreignKey: 'authorId', targetKey: 'id' });
 
-module.exports = { sequelize, User, Channel, Message, MessageVersion, Reaction };
+// Associations for attachments
+MessageVersion.belongsToMany(Attachment, { through: MessageVersionAttachment, foreignKey: 'messageVersionId' });
+Attachment.belongsToMany(MessageVersion, { through: MessageVersionAttachment, foreignKey: 'attachmentId' });
+
+module.exports = { sequelize, User, Channel, Message, MessageVersion, Reaction, Attachment, MessageVersionAttachment };

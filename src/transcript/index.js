@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const discordTranscripts = require('discord-html-transcripts');
 const { buildAvatarUrl } = require('../utils/avatar');
+const { Collection } = require('discord.js');
 
 /**
  * Generates an HTML transcript from messages saved in the database.
@@ -30,18 +31,46 @@ async function generateTranscript(channelId, opts) {
     const dbMessages = await db.Message.findAll({
         where: { channelId: channelId },
         include: [
-            { model: db.MessageVersion, order: [['createdAt', 'ASC']] },
+            { 
+                model: db.MessageVersion, 
+                order: [['createdAt', 'ASC']],
+                include: [
+                    {
+                        model: db.Attachment,
+                        through: { attributes: [] }, // Don't include join table attributes
+                        as: 'Attachments'
+                    }
+                ]
+            },
             db.Reaction,
             db.User,
         ],
     });
 
     const reactions = new Map();
-    const attachments = new Map();
     const fakeMessages = dbMessages.map((m) => {
         const user = m.User;
         const avatarHash = user?.avatar || null;
         const userId = m.authorId;
+        
+        // Get attachments from the latest message version
+        const latestVersion = m.MessageVersions[m.MessageVersions.length - 1];
+        const attachments = new Collection();
+        
+        if (latestVersion.Attachments && latestVersion.Attachments.length > 0) {
+            latestVersion.Attachments.forEach((att) => {
+                attachments.set(att.id, {
+                    id: att.id,
+                    name: att.filename,
+                    url: att.storageUrl,
+                    size: att.size,
+                    contentType: att.contentType,
+                    width: att.width || null,
+                    height: att.height || null,
+                });
+            });
+        }
+
         return {
             id: m.messageId,
             author: {
