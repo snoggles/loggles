@@ -3,6 +3,7 @@ const db = require('../db');
 const config = require('../config');
 const { Message } = require('discord.js');
 const generateTranscript = require('../transcript')
+const { createEmbeds } = require('../transcript/fakes');
 
 module.exports = {
 	name: Events.MessageCreate,
@@ -36,6 +37,7 @@ module.exports = {
 		const msgVersionDbo = {
 			messageId: message.id,
 			content: message.content,
+			embeds: createEmbeds(message.embeds ?? []),
 			createdAt: message.createdAt,
 		}
 		await db.MessageVersion.create(msgVersionDbo);

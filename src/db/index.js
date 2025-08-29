@@ -57,6 +57,19 @@ const MessageVersion = define("MessageVersion", {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   messageId: snowflake('messageId'),
   content: DataTypes.TEXT,
+  embeds: {
+    // react component expects an array, although we map [] to null to save space in the DB.
+    type: DataTypes.JSON,
+    allowNull: true,
+    get() {
+      const dbo = this.getDataValue('embeds');
+      return dbo ?? [];
+    },
+    set(val) {
+      const dbo = Array.isArray(val) && val.length > 0 ? val : null;
+      this.setDataValue('embeds', dbo);
+    }
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

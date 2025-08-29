@@ -52,8 +52,8 @@ async function generateTranscript(channelId, opts) {
             },
             createdAt: new Date(m.MessageVersions[0].createdAt),
             content: m.MessageVersions[0].content,
+            embeds: Array.isArray(m.MessageVersions[0].embeds) ? m.MessageVersions[0].embeds : [],
             editedAt: null, // TODO
-            embeds: [],
             components: [],
             mentions: {
                 everyone: false,

@@ -1,6 +1,7 @@
 const { Events, MessageFlags, AttachmentBuilder } = require('discord.js');
 const config = require('../config');
 const db = require('../db');
+const { createEmbeds } = require('../transcript/fakes');
 
 module.exports = {
 	name: Events.MessageUpdate,
@@ -20,6 +21,7 @@ module.exports = {
 		const msgVersionDbo = {
 			messageId: newMessage.id,
 			content: newMessage.content,
+			embeds: createEmbeds(newMessage.embeds ?? []),
 			createdAt: newMessage.createdAt,
 		}
 		await db.MessageVersion.create(msgVersionDbo);
