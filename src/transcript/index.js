@@ -25,7 +25,7 @@ async function generateTranscript(channelId, opts) {
         }
     });
 
-    if (!channel.name) return;
+    if (!channel) return;
 
     const dbMessages = await db.Message.findAll({
         where: { channelId: channelId },
@@ -47,7 +47,7 @@ async function generateTranscript(channelId, opts) {
             author: {
                 id: m.authorId,
                 username: user?.username || 'Unknown',
-                displayName: `${user.globalName} (${user.username})`,
+                displayName: user?.globalName && user?.username && user?.globalName != user?.username ? `${user.globalName} (${user.username})` : user?.username || user?.globalName || 'Unknown',
                 displayAvatarURL: (opts = {}) => buildAvatarUrl(userId, avatarHash, opts),
             },
             createdAt: new Date(m.MessageVersions[0].createdAt),
@@ -76,7 +76,7 @@ async function generateTranscript(channelId, opts) {
     }
 
     return {
-        messages: dbMessages,
+        messages: dbMessages ?? [],
         transcript: await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel, opts),
     };
 }

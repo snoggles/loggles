@@ -14,7 +14,7 @@ module.exports = {
 		await db.User.upsert({
 			id: message.author.id,
 			username: message.author.username,
-			globalName: message.author.globalName ?? null,
+			globalName: message.author.globalName ?? message.author.displayName,
 			avatar: message.author.avatar ?? null,
 		});
 

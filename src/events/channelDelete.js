@@ -19,15 +19,40 @@ module.exports = {
 			}
 		)
 
+		const authorsMap = new Map();
+		for (const msg of response.messages) {
+			const user = msg.User;
+			if (!user) continue;
+			if (!authorsMap.has(user.id)) {
+				authorsMap.set(user.id, {
+					id: user.id,
+					username: user.username,
+					globalName: user.globalName,
+				});
+			}
+		}
+
+		const ignoredUserIds = config.ignoredUserIds || [];
+		const hasNonIgnoredUser = authorsMap.keys().some(userId => !ignoredUserIds.includes(userId));
+		if (!hasNonIgnoredUser) {
+			return;
+		}
+
+		const authorList = Array.from(authorsMap.values())
+			.map(u => `- <@${u.id}> ${u.username}` + (u.globalName && u.globalName != u.username ? ` (${u.globalName})` : ''))
+			.join('\n');
+
+		const messageContent = `<#${channel.id}> ${channel.name}\n${authorList}`;
+
+
 		const loggingChannel = await channel.client.channels.fetch(loggingChannelId);
-		const description = `Transcript of ${channel.name}`
 		await loggingChannel.send({
-			content: description,
+			content: messageContent,
 			files: [
 				{
 					attachment: response.transcript,
 					name: `#${channel.id} ${channel.name} transcript.html`,
-					description: description,
+					description: messageContent,
 				}
 			]
 		});
