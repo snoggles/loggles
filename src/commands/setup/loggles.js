@@ -4,17 +4,21 @@ const db = require('../../db');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('loggles')
-        .setDescription('Configure discord channel logging')
-        .addChannelOption(option =>
-            option.setName('logging_channel')
-                .setDescription('The channel where message logs will be posted')
-                .setRequired(true))
-        .addChannelOption(option =>
-            option.setName('storage_channel')
-                .setDescription('The channel where attachments will be stored')
-                .setRequired(true))
+        .setDescription('Loggles configuration commands')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('setup')
+                .setDescription('Configure discord channel logging')
+                .addChannelOption(option =>
+                    option.setName('logging_channel')
+                        .setDescription('The channel where message logs will be posted')
+                        .setRequired(true))
+                .addChannelOption(option =>
+                    option.setName('storage_channel')
+                        .setDescription('The channel where attachments will be stored')
+                        .setRequired(true))
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
     async execute(interaction) {
         const loggingChannel = interaction.options.getChannel('logging_channel');
         const storageChannel = interaction.options.getChannel('storage_channel');

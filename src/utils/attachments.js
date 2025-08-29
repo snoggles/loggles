@@ -79,5 +79,3 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
 }
 
 module.exports = { mirrorAndLinkAttachments };
-
-
