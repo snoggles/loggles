@@ -39,6 +39,7 @@ const Channel = define('Channel', {
   },
   guildId: snowflake('guildId'),
   name: DataTypes.STRING,
+  isVoiceBased: DataTypes.BOOLEAN,
   createdAt: DataTypes.DATE,
   deletedAt: DataTypes.DATE,
 });

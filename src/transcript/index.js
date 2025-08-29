@@ -42,7 +42,7 @@ async function generateTranscript(channelId, opts) {
         name: channel.name,
         isDMBased: () => false,
         isThread: () => false,
-        isVoiceBased: () => true, // TODO
+        isVoiceBased: () => channel.isVoiceBased || false,
         guild: createFakeGuild(guildData)
     }
 

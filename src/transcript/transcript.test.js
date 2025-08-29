@@ -29,6 +29,7 @@ test('generate html', async (t) => {
         guildId: 1,
         channelId: 1,
         name: "Farming 1 🔵",
+        isVoiceBased: true,
         createdAt: Date.now(),
     })
     await db.Message.create({

@@ -25,6 +25,7 @@ module.exports = {
 			guildId: message.channel.guildId,
 			channelId: message.channelId,
 			name: message.channel.name,
+			isVoiceBased: message.channel.isVoiceBased(),
 			createdAt: message.channel.createdAt,
 		}
 		await db.Channel.upsert(channelDbo);
