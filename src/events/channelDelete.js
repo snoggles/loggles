@@ -3,13 +3,22 @@ const generateTranscript = require('../transcript');
 const fs = require('fs');
 const config = require('../config');
 const { channelCallbacks } = require('../transcript/callbacks');
+const db = require('../db');
 
 module.exports = {
 	name: Events.ChannelDelete,
 	async execute(channel) {
-		const loggingChannelId = await config.loggingChannelId(channel.guildId)
-		if (channel.id === loggingChannelId) return;
+		const guild = await db.Guild.findByPk(channel.guildId);
 
+		// Ignore if we're not configured yet.
+		if (!guild?.loggingChannelId || !guild?.storageChannelId) return;
+
+		if (channel.id === guild.loggingChannelId) {
+			// Logging channel deleted means no more logging until /loggles setup is run again.
+			guild.loggingChannelId = null;
+			guild.save();
+			return;
+		}
 
 		const response = await generateTranscript(
 			channel.id,
@@ -34,7 +43,7 @@ module.exports = {
 		const messageContent = `<#${channel.id}> ${channel.name}\n${authorList}`;
 
 
-		const loggingChannel = await channel.client.channels.fetch(loggingChannelId);
+		const loggingChannel = await channel.client.channels.fetch(guild.loggingChannelId);
 		await loggingChannel.send({
 			content: messageContent,
 			files: [

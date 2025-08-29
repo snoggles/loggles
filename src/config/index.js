@@ -12,14 +12,4 @@ module.exports = {
   ignoredUserIds: [
     // '762217899355013120', // TempVoice
   ],
-  loggingChannelId: async (guildId) => {
-    const db = require('../db');
-    const guild = await db.Guild.findByPk(guildId);
-    return guild?.loggingChannelId || null;
-  },
-  storageChannelId: async (guildId) => {
-    const db = require('../db');
-    const guild = await db.Guild.findByPk(guildId);
-    return guild?.storageChannelId || null;
-  },
 };

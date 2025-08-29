@@ -5,30 +5,13 @@ const { Message } = require('discord.js');
 const generateTranscript = require('../transcript')
 const { createEmbeds } = require('../transcript/fakes');
 const { mirrorAndLinkAttachments } = require('../utils/attachments');
+const { shouldLog } = require('../utils/channelHelper');
 
 module.exports = {
 	name: Events.MessageCreate,
 	async execute(message) {
-		const loggingChannelId = await config.loggingChannelId(message.guildId);
-		const storageChannelId = await config.storageChannelId(message.guildId);
-		if (message.channelId === loggingChannelId || message.channelId === storageChannelId) return;
-
-		// Ensure guild data is synced
-		if (message.guild) {
-			const [guildRecord, created] = await db.Guild.upsert({
-				guildId: message.guild.id,
-				name: message.guild.name,
-				icon: message.guild.icon,
-				loggingChannelId: loggingChannelId,
-				storageChannelId: storageChannelId,
-				updatedAt: new Date(),
-			});
-			
-			// If this is the target guild and channel IDs are null, populate hardcoded values
-			if (message.guild.id === '1236524027221377036' && (!guildRecord.loggingChannelId || !guildRecord.storageChannelId)) {
-				await populateHardcodedChannelIds(guildRecord);
-			}
-		}
+		// Check if we should log this message
+		if (!(await shouldLog(message.channel))) return;
 
 		// Upsert user details for avatar and names
 		await db.User.upsert({
@@ -63,27 +46,3 @@ module.exports = {
 		await mirrorAndLinkAttachments(message, version.id);
 	},
 };
-
-async function populateHardcodedChannelIds(guildRecord) {
-	try {
-		const previouslyHardcodedLoggingChannelId = '1383630551298080778';
-		const previouslyHardcodedStorageChannelId = '1410921412968976465';
-		
-		// Update with previously hardcoded values if they're not already set
-		const updates = {};
-		if (!guildRecord.loggingChannelId) {
-			updates.loggingChannelId = previouslyHardcodedLoggingChannelId;
-		}
-		if (!guildRecord.storageChannelId) {
-			updates.storageChannelId = previouslyHardcodedStorageChannelId;
-		}
-		
-		if (Object.keys(updates).length > 0) {
-			updates.updatedAt = new Date();
-			await guildRecord.update(updates);
-			console.log(`✅ Populated hardcoded channel IDs for guild ${guildRecord.guildId}:`, updates);
-		}
-	} catch (error) {
-		console.error('Error populating hardcoded channel IDs:', error);
-	}
-}

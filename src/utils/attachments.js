@@ -1,6 +1,5 @@
 const crypto = require('node:crypto');
 const db = require('../db');
-const config = require('../config');
 const { Attachment } = require('discord.js');
 
 async function bufferSha256(buffer) {
@@ -28,8 +27,12 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
   if (!attachments || attachments.size === 0) return;
 
   const guildId = message.guildId || message.guild?.id;
-  const storageChannelId = await config.storageChannelId(guildId);
-  const storageChannel = await message.client.channels.fetch(storageChannelId);
+  if (!guildId) return;
+  
+  const guild = await db.Guild.findByPk(guildId);
+  if (!guild?.storageChannelId) return;
+  
+  const storageChannel = await message.client.channels.fetch(guild.storageChannelId);
 
   for (const [, att] of attachments) {
     try {
@@ -61,7 +64,7 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
           size: att.size || buffer.length,
           width,
           height,
-          storageChannelId: storageChannelId,
+          storageChannelId: guild.storageChannelId,
           storageMessageId: sent.id,
           storageUrl: sentAttachment?.url || null,
         });
