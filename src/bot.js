@@ -47,10 +47,10 @@ for (const file of eventFiles) {
 
     console.log(`Event listener: ${event.name}`)
     const dispatchEvent = async (...args) => {
-        console.log(`Event ${event.name} | `, args[0]);
         try {
             await event.execute(...args);
         } catch (error) {
+            console.log(`Event ${event.name} | `, args[0]);
             console.error(`Error executing event ${event.name}:`, error);
         }
     };
