@@ -10,67 +10,60 @@ A Discord bot that creates HTML transcripts of channels when they're deleted, pe
 - **Self-hosted**: Full control over your data and bot behavior
 - **Easy setup**: Simple slash command configuration
 
-## Self-Hosted Only
+## Status
+Loggles is a low-effort, unpolished project in development. It may:
+- Make breaking changes to the database on updates
+- Crash in unexpected ways due to lack of testing
 
-⚠️ **Important**: Loggles is designed as a self-hosted solution only. This ensures:
+## Self-Hosted Only
+Loggles is designed as a self-hosted solution. This ensures:
 - Your data stays on your own infrastructure
 - No external services have access to your Discord server content
-- Full control over logging policies and data retention
-- Compliance with your organization's data handling requirements
+- You are in control of your uptime and storage resources
 
-## Setup Instructions
+## Instructions
 
-### 1. Prerequisites
-
-- Node.js 16.9.0 or higher
-- A Discord application and bot token
-- Administrator permissions on your Discord server
-
-### 2. Installation
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/snoggles/loggles.git
-   cd loggles
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory:
-   ```env
-   DISCORD_TOKEN=your_bot_token_here
-   DISCORD_CLIENT_ID=your_client_id_here
-   ```
-
-4. Deploy the slash commands:
-   ```bash
-   node src/deploy-commands.js
-   ```
-
-5. Start the bot:
-   ```bash
-   node src/bot.js
-   ```
-
-### 3. Adding to Your Discord Server
-
+### 1. Create Discord Bot App
 1. Go to your Discord application's OAuth2 settings
 2. Add the following scopes:
    - `bot`
    - `applications.commands`
 3. Add the following bot permissions:
-   - Read Messages/View Channels
+   - View Channels
+   - Read Message History
    - Send Messages
    - Attach Files
-   - Read Message History
-   - Use Slash Commands
-4. Use the generated OAuth2 URL to add the bot to your server
+4. Save the client id and discord token to give to the bot
+5. Save the generated OAuth2 URL
+
+### 2. Start the bot
+#### docker
+```sh
+docker run -it -e DISCORD_CLIENT_ID=... -e DISCORD_TOKEN=... -v loggles-data:/data ghcr.io/snoggles/loggles:latest
+```
+
+#### docker-compose
+```dotenv file=.env
+DISCORD_CLIENT_ID=...
+DISCORD_TOKEN=...
+```
+
+```yaml file=docker-compose.yml
+services:
+  loggles:
+    image: ghcr.io/snoggles/loggles:latest
+    container_name: loggles
+    environment:
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+    volumes:
+      - loggles-data:/data
+```
+
+### 3. Add the bot to your server
+Use the generated OAuth2 URL to add the bot to your server.
 
 ### 4. Configuration
-
 Once the bot is added to your server, run the setup command:
 
 ```
@@ -107,14 +100,6 @@ The bot automatically configures itself based on your Discord server permissions
 - Uses SQLite for local data storage
 - Automatically creates necessary tables on first run
 - Data is stored in `data.sqlite` in the project root
-
-## Dependencies
-
-- `discord.js` - Discord API wrapper
-- `sequelize` - Database ORM
-- `sqlite3` - SQLite database driver
-- `discord-html-transcripts` - HTML transcript generation
-- `dotenv` - Environment variable management
 
 ## Security Considerations
 

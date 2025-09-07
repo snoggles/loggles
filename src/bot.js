@@ -62,6 +62,7 @@ for (const file of eventFiles) {
 }
 
 (async () => {
-  await db.sequelize.sync({ force: true });
-  await client.login(token);
+    const opts = config.env == "development" ? { force: true } : { alter: true };
+    await db.sequelize.sync(opts);
+    await client.login(token);
 })();
