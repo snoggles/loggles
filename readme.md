@@ -66,6 +66,8 @@ services:
 Use the generated OAuth2 URL to add the bot to your server.
 
 ### 4. Configuration
+<img src="assets/commands.png" alt="Commands" width="300">
+
 Once the bot is added to your server, run the setup command:
 
 ```
