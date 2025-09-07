@@ -4,11 +4,10 @@ const { Sequelize, DataTypes } = require('sequelize');
 
 const sequelize = new Sequelize(config.dbUrl, {
   dialect: 'sqlite',
-  logging: (queryString, queryObject) => {
+  logging: config.logQueries ? (queryString, queryObject) => {
     console.log(queryString)      // query as string
     if (queryObject.bind) console.log(queryObject.bind) // params as array
-  },
-  // logging: false,
+  } : false,
 });
 
 const defaultModelOptions = {
