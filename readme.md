@@ -2,6 +2,8 @@
 
 A Discord bot that creates HTML transcripts of channels when they're deleted, perfect for capturing what happens in temporary channels like TempVoice, tickets, or any other ephemeral channels.
 
+<img src="assets/profile.png" alt="Profile Picture" width="300">
+
 ## Features
 
 - **Real-time logging**: Captures all messages, attachments, and reactions in real-time
@@ -37,8 +39,8 @@ Loggles is designed as a self-hosted solution. This ensures:
 5. Save the generated OAuth2 URL
 
 ### 2. Start the bot
-#### docker
-```sh
+#### docker-cli
+```bash
 docker run -it -e DISCORD_CLIENT_ID=... -e DISCORD_TOKEN=... -v loggles-data:/data ghcr.io/snoggles/loggles:latest
 ```
 
