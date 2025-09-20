@@ -14,7 +14,7 @@ A Discord bot that creates HTML transcripts of channels when they're deleted, pe
 
 ## Status
 Loggles is a low-effort, unpolished project in development. It may:
-- Make breaking changes to the database on updates
+- Make breaking changes to its database on updates
 - Crash in unexpected ways due to lack of testing
 
 ## Self-Hosted Only
@@ -25,18 +25,35 @@ Loggles is designed as a self-hosted solution. This ensures:
 
 ## Instructions
 
-### 1. Create Discord Bot App
-1. Go to your Discord application's OAuth2 settings
-2. Add the following scopes:
-   - `bot`
-   - `applications.commands`
-3. Add the following bot permissions:
-   - View Channels
-   - Read Message History
-   - Send Messages
-   - Attach Files
-4. Save the client id and discord token to give to the bot
-5. Save the generated OAuth2 URL
+### 1. Create Discord App
+Create a new app at https://discord.com/developers/applications and set the following settings:
+
+#### ⚙️ **Installation**
+- **Installation Contexts**
+  - ❌ User Install
+  - ✅ Guild Install
+- **Install Link**
+  - *(save the URL to add the bot to your server(s) later)*
+- **Default Install Settings**
+  - Guild Install
+    - Scopes
+      - `bot`
+      - `applications.commands`
+    - Permissions
+      - `View Channels`
+      - `Read Message History`
+      - `Send Messages`
+      - `Attach Files`
+#### 🔧 OAuth2
+- **Client Information**
+  - *(save the **CLIENT ID** to provide to the bot as `DISCORD_CLIENT_ID` below.)*
+
+#### 🤖 Bot
+- TOKEN
+  - Click `Reset Token`
+  - *(save the generated token provide to the bot as `DISCORD_TOKEN` below.)*
+- **Privileged Gateway Intents**
+  - ✅ `MESSAGE CONTENT INTENT` so the bot can see messages.
 
 ### 2. Start the bot
 #### docker-cli
