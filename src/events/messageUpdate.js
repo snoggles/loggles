@@ -25,7 +25,7 @@ module.exports = {
 			messageId: newMessage.id,
 			content: newMessage.content,
 			embeds: createEmbeds(newMessage.embeds ?? []),
-			createdAt: newMessage.createdAt,
+			createdAt: newMessage.editedAt,
 		}
 		const version = await db.MessageVersion.create(msgVersionDbo);
 		await mirrorAndLinkAttachments(newMessage, version.id);
