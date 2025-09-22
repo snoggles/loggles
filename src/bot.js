@@ -17,7 +17,10 @@ const client = new Client({
 
 client.commands = new Collection();
 
-// client.ws.on('MESSAGE_CREATE', (data, shard) => console.log(JSON.stringify(data)));
+if (config.logRawEvents) {
+    // Warning: lots of data!
+    client.ws.on('MESSAGE_CREATE', (data, shard) => console.log(JSON.stringify(data)));
+}
 
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -48,10 +51,13 @@ for (const file of eventFiles) {
     console.log(`Event listener: ${event.name}`)
     const dispatchEvent = async (...args) => {
         try {
+            if (config.logEventNames) {
+                console.log(`Starting event ${event.name}`, args[0])
+            }
             await event.execute(...args);
         } catch (error) {
-            console.log(`Event ${event.name} | `, args[0]);
-            console.error(`Error executing event ${event.name}:`, error);
+            console.log(`Error during ${event.name} | `, args[0]);
+            console.error(`Error: ${event.name}:`, error);
         }
     };
     if (event.once) {
