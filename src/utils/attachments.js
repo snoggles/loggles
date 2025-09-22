@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 const db = require('../db');
-const { Attachment } = require('discord.js');
+const { Attachment, MessageFlags } = require('discord.js');
 
 async function bufferSha256(buffer) {
   const hash = crypto.createHash('sha256');
@@ -28,10 +28,10 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
 
   const guildId = message.guildId || message.guild?.id;
   if (!guildId) return;
-  
+
   const guild = await db.Guild.findByPk(guildId);
   if (!guild?.storageChannelId) return;
-  
+
   const storageChannel = await message.client.channels.fetch(guild.storageChannelId);
 
   for (const [, att] of attachments) {
@@ -44,19 +44,26 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
       let attachmentRow = await db.Attachment.findOne({ where: { hash } });
       if (!attachmentRow) {
         // Mirror to storage channel
-        const sent = await storageChannel.send({ files: [{ attachment: buffer, name: att.name, description: `Mirrored from ${message.channel?.name || message.channelId}` }] });
+        const sent = await storageChannel.send({
+          content: `From <@${message.author.id}> in #${message.channel.name} at ${message.url}`,
+          files: [{ attachment: buffer, name: att.name, description: `Mirrored from ${message.channel?.name || message.channelId}` }],
+          allowedMentions: {
+            parse: [],
+          },
+          flags: MessageFlags.SuppressNotifications,
+        });
         const sentAttachment = sent.attachments.first();
 
         // Extract image dimensions if it's an image
         let width = null;
         let height = null;
-        
+
         // First try to get dimensions from the original Discord attachment
         if (att.width && att.height) {
           width = att.width;
           height = att.height;
         }
-        
+
         attachmentRow = await db.Attachment.create({
           hash,
           filename: att.name,

@@ -52,7 +52,11 @@ module.exports = {
 					name: `#${channel.id} ${channel.name} transcript.html`,
 					description: messageContent,
 				}
-			]
+			],
+			allowedMentions: {
+				parse: [],
+			},
+			flags: MessageFlags.SuppressNotifications,
 		});
 	},
 };
