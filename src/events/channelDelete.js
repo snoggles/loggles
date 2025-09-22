@@ -1,4 +1,4 @@
-const { Events, AttachmentBuilder } = require('discord.js');
+const { Events, AttachmentBuilder, MessageFlags } = require('discord.js');
 const generateTranscript = require('../transcript');
 const fs = require('fs');
 const config = require('../config');
