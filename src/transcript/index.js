@@ -79,7 +79,7 @@ async function generateTranscript(channelId, opts) {
         // Create a message for each version
         for (let index = 0; index < m.MessageVersions.length; index++) {
             const version = m.MessageVersions[index];
-        
+
             const isFinalVersion = index === m.MessageVersions.length - 1
             const messageId = isFinalVersion ? m.messageId : `${m.messageId}.${index}`;
 
@@ -123,7 +123,7 @@ async function generateTranscript(channelId, opts) {
                 // Convert to discord.js reaction format
                 Object.entries(reactionGroups).forEach(([emojiKey, group]) => {
                     const [emojiName, emojiId] = emojiKey.includes(':') ? emojiKey.split(':') : [emojiKey, null];
-                    
+
                     messageReactions.set(emojiKey, {
                         emoji: {
                             id: emojiId,
@@ -139,7 +139,7 @@ async function generateTranscript(channelId, opts) {
             }
 
             const content = isFinalVersion ? version.content : `~~${version.content}~~`;
-            
+
             const messageObj = {
                 id: messageId,
                 author: {
@@ -171,15 +171,55 @@ async function generateTranscript(channelId, opts) {
         }
     }
 
+    const transcriptBuffer = await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel,
+        {
+            callbacks: dummyCallbacks,
+            ...opts
+        }
+    );
+
+    let plaintextHeader = createPlaintextHeader(dbMessages)
+    const result = Buffer.concat([
+        Buffer.from(plaintextHeader, 'utf8'),
+        transcriptBuffer
+    ]);
+
     return {
         messages: dbMessages ?? [],
-        transcript: await discordTranscripts.generateFromMessages(fakeMessages, fakeChannel,
-            {
-                callbacks: dummyCallbacks,
-                ...opts
-            }
-        ),
+        transcript: result,
     };
+}
+
+function createPlaintextHeader(dbMessages) {
+    /**
+     * A skimmable (duplicate) plaintext header version of the messages.
+     */
+    let plaintextHeader = "<!--\n";
+    try {
+        for (const m of dbMessages) {
+            for (let index = 0; index < m.MessageVersions.length; index++) {
+                const mv = m.MessageVersions[index];
+                const isFinalVersion = index === m.MessageVersions.length - 1
+
+                let content = mv.content ?? "";
+                const attachments = mv.Attachments
+                if (attachments && attachments.length > 0) {
+                    content += " " + attachments.map(a => a.filename).join(', ');
+                }
+                content = content.replaceAll('\n', ' ').replaceAll('-->', '');
+
+                if (isFinalVersion) {
+                    plaintextHeader += `${m.User.username}: ${content}\n`;
+                } else {
+                    plaintextHeader += `  ${m.User.username} (edit): ~~${content}~~\n`;
+                }
+            }
+        }
+    } catch (error) {
+        // ignore. not worth blowing up the HTML over a bug in the summary.
+    }
+    plaintextHeader += "-->\n";
+    return plaintextHeader;
 }
 
 module.exports = generateTranscript;
