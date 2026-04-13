@@ -40,24 +40,38 @@ module.exports = {
 			.map(u => `- <@${u.id}> ${u.username}` + (u.globalName && u.globalName != u.username ? ` (${u.globalName})` : ''))
 			.join('\n');
 
-		const messageContent = `<#${channel.id}> ${channel.name}\n${authorList}`;
-
+		const header = `<#${channel.id}> ${channel.name}`;
+		const messageContent = `${header}\n${authorList}`;
 
 		const loggingChannel = await channel.client.channels.fetch(guild.loggingChannelId);
-		await loggingChannel.send({
-			content: messageContent,
-			files: [
-				{
-					attachment: response.transcript,
-					name: `#${channel.id} ${channel.name} transcript.html`,
-					description: messageContent,
-				}
-			],
-			allowedMentions: {
-				parse: [],
-			},
-			flags: MessageFlags.SuppressNotifications,
-		});
+
+		const sendLog = async (content, description) => {
+			await loggingChannel.send({
+				content: content.slice(0, 2000),
+				files: [
+					{
+						attachment: response.transcript,
+						name: `#${channel.id} ${channel.name} transcript.html`,
+						description: description.slice(0, 1024),
+					}
+				],
+				allowedMentions: {
+					parse: [],
+				},
+				flags: MessageFlags.SuppressNotifications,
+			});
+		};
+
+		try {
+			await sendLog(messageContent, messageContent);
+		} catch (error) {
+			if (error.code === 50035) {
+				console.warn(`[channelDelete] Failed to send transcript with author list for #${channel.id}, retrying without author list. Error: ${error.message}`);
+				await sendLog(header, header);
+			} else {
+				throw error;
+			}
+		}
 	},
 };
 
