@@ -4,6 +4,7 @@ module.exports = {
 	name: Events.InteractionCreate,
 	async execute(interaction) {
 		if (!interaction.isChatInputCommand()) return;
+		console.log(`/${interaction.commandName} by ${interaction.user.username} (${interaction.user.id})`, interaction.options.data);
 
 		const command = interaction.client.commands.get(interaction.commandName);
 
