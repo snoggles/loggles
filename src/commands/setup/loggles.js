@@ -18,6 +18,14 @@ module.exports = {
                         .setDescription('Only include messages sent within the past number of days')
                         .setMinValue(1)
                         .setRequired(false))
+                .addStringOption(option =>
+                    option.setName('visibility')
+                        .setDescription('Who can see the search response')
+                        .addChoices(
+                            { name: 'Only me', value: 'ephemeral' },
+                            { name: 'Everyone in this channel', value: 'public' }
+                        )
+                        .setRequired(false))
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     async execute(interaction) {

@@ -18,8 +18,12 @@ module.exports = async function searchMessages(interaction) {
         .permissionsFor(everyoneRole)
         ?.has(PermissionFlagsBits.ViewChannel)
     : false;
+  const visibility = interaction.options.getString("visibility") ?? "ephemeral";
   await interaction.deferReply({
-    flags: everyoneCanView ? MessageFlags.Ephemeral : undefined,
+    flags:
+      everyoneCanView || visibility === "ephemeral"
+        ? MessageFlags.Ephemeral
+        : undefined,
   });
 
   const messages = await db.Message.findAll({
