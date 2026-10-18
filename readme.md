@@ -88,7 +88,7 @@ Use the generated OAuth2 URL to add the bot to your server.
 Once the bot is added to your server, run the setup command:
 
 ```
-/loggles setup
+/setup configure
 ```
 
 You'll need to specify two channels:

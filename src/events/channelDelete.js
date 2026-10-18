@@ -14,7 +14,7 @@ module.exports = {
 		if (!guild?.loggingChannelId || !guild?.storageChannelId) return;
 
 		if (channel.id === guild.loggingChannelId) {
-			// Logging channel deleted means no more logging until /loggles setup is run again.
+			// Logging channel deleted means no more logging until /setup configure is run again.
 			guild.loggingChannelId = null;
 			guild.save();
 			return;
