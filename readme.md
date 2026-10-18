@@ -122,6 +122,10 @@ The bot automatically configures itself based on your Discord server permissions
 - Automatically creates necessary tables on first run
 - Data is stored in `data.sqlite` in the project root
 
+### Environment variables
+
+- `DEPLOY_COMMANDS_ON_STARTUP`: Set to `true` to deploy slash commands when the bot starts. Defaults to `false`.
+
 ## Security Considerations
 
 - The bot only logs channels it has access to

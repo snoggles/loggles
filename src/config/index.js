@@ -12,6 +12,7 @@ module.exports = {
   logQueries: process.env.DEBUG_LOG_QUERIES === 'true',
   logEventNames: process.env.DEBUG_LOG_EVENT_NAMES === 'true',
   logRawEvents: process.env.DEBUG_LOG_RAW_EVENTS === 'true',
+  deployCommandsOnStartup: process.env.DEPLOY_COMMANDS_ON_STARTUP === 'true',
   ignoredUserIds: [
     // '762217899355013120', // TempVoice
   ],
