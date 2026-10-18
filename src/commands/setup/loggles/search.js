@@ -76,7 +76,10 @@ module.exports = async function searchMessages(interaction) {
           return dateDifference || left.id - right.id;
         });
         const latestVersion = versions[versions.length - 1];
-        const content = latestVersion?.content || "";
+        const content = (latestVersion?.content || "").replace(
+          /\r\n|\n|\r/g,
+          "$&   ",
+        );
         const attachments = latestVersion?.Attachments || [];
         const attachmentText = attachments
           .map(
