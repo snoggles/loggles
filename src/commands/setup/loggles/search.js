@@ -81,7 +81,7 @@ module.exports = async function searchMessages(interaction) {
         const attachmentText = attachments
           .map(
             (attachment) =>
-             `${backtick(attachment.filename)} ${backtick(message.messageId)})`,
+             `${backtick(attachment.filename)} ${backtick(message.messageId)}`,
           )
           .join(" ");
         return `- ${content}${attachmentText ? ` ${attachmentText}` : ""}`;
