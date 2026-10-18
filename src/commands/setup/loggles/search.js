@@ -1,4 +1,8 @@
-const { AttachmentBuilder } = require("discord.js");
+const {
+  AttachmentBuilder,
+  MessageFlags,
+  PermissionFlagsBits,
+} = require("discord.js");
 const db = require("../../../db");
 
 const DISCORD_EPOCH = 1420070400000n;
@@ -8,7 +12,15 @@ module.exports = async function searchMessages(interaction) {
   const days = interaction.options.getInteger("days");
   const cutoff = days === null ? null : Date.now() - days * 24 * 60 * 60 * 1000;
 
-  await interaction.deferReply();
+  const everyoneRole = interaction.guild?.roles.everyone;
+  const everyoneCanView = everyoneRole
+    ? interaction.channel
+        .permissionsFor(everyoneRole)
+        ?.has(PermissionFlagsBits.ViewChannel)
+    : false;
+  await interaction.deferReply({
+    flags: everyoneCanView ? MessageFlags.Ephemeral : undefined,
+  });
 
   const messages = await db.Message.findAll({
     where: { authorId: user.id },
@@ -61,7 +73,9 @@ module.exports = async function searchMessages(interaction) {
   });
 
   const range =
-    days === null ? "all" : `within the past ${days} ${days === 1 ? "day" : "days"}`;
+    days === null
+      ? "all"
+      : `within the past ${days} ${days === 1 ? "day" : "days"}`;
   const title = `${matchingMessages.length} messages sent by @${user.username} <@${user.id}> (${range})`;
   const sections = orderedChannels.map(
     ({ channel, messages: channelMessages }) => {
@@ -84,7 +98,7 @@ module.exports = async function searchMessages(interaction) {
         const attachmentText = attachments
           .map(
             (attachment) =>
-             `${backtick(attachment.filename)} ${backtick(message.messageId)}`,
+              `${backtick(attachment.filename)} ${backtick(message.messageId)}`,
           )
           .join(" ");
         return `- ${content}${attachmentText ? ` ${attachmentText}` : ""}`;
@@ -107,7 +121,7 @@ module.exports = async function searchMessages(interaction) {
 function messageTimestamp(messageId) {
   return Number((BigInt(messageId) >> 22n) + DISCORD_EPOCH);
 }
-const backtick = (s) => '`' + s + '`'
+const backtick = (s) => "`" + s + "`";
 
 function compareSnowflakes(left, right) {
   const leftId = BigInt(left);
