@@ -1,16 +1,19 @@
-const crypto = require('node:crypto');
-const db = require('../db');
-const { Attachment, MessageFlags } = require('discord.js');
+const crypto = require("node:crypto");
+const db = require("../db");
+const { Attachment, MessageFlags } = require("discord.js");
 
 async function bufferSha256(buffer) {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(buffer);
   return hash.digest(); // Buffer for BLOB storage
 }
 
 async function fetchBuffer(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch attachment: ${res.status} ${res.statusText}`);
+  if (!res.ok)
+    throw new Error(
+      `Failed to fetch attachment: ${res.status} ${res.statusText}`,
+    );
   const arrayBuffer = await res.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
@@ -32,7 +35,9 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
   const guild = await db.Guild.findByPk(guildId);
   if (!guild?.storageChannelId) return;
 
-  const storageChannel = await message.client.channels.fetch(guild.storageChannelId);
+  const storageChannel = await message.client.channels.fetch(
+    guild.storageChannelId,
+  );
 
   for (const [, att] of attachments) {
     try {
@@ -46,7 +51,13 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
         // Mirror to storage channel
         const sent = await storageChannel.send({
           content: `From <@${message.author.id}> in #${message.channel.name} at ${message.url}`,
-          files: [{ attachment: buffer, name: att.name, description: `Mirrored from ${message.channel?.name || message.channelId}` }],
+          files: [
+            {
+              attachment: buffer,
+              name: att.name,
+              description: `Mirrored from ${message.channel?.name || message.channelId}`,
+            },
+          ],
           allowedMentions: {
             parse: [],
           },
@@ -83,7 +94,7 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
         attachmentId: attachmentRow.id,
       });
     } catch (err) {
-      console.error('Attachment mirror/link failed:', err);
+      console.error("Attachment mirror/link failed:", err);
     }
   }
 }
