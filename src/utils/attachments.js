@@ -41,7 +41,7 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
 
   for (const [, att] of attachments) {
     try {
-      const url = att.proxyURL || att.url;
+      const url = getAttachmentUrl(att);
       const buffer = await fetchBuffer(url);
       const hash = await bufferSha256(buffer);
 
@@ -97,6 +97,16 @@ async function mirrorAndLinkAttachments(message, messageVersionId) {
       console.error("Attachment mirror/link failed:", err);
     }
   }
+}
+
+function getAttachmentUrl(attachment) {
+  const type = attachment.contentType ?? "";
+
+  return type.startsWith("image/") ||
+    type.startsWith("video/") ||
+    type.startsWith("audio/")
+    ? attachment.proxyURL
+    : attachment.url;
 }
 
 module.exports = { mirrorAndLinkAttachments };
